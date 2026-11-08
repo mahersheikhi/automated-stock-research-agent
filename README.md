@@ -13,7 +13,7 @@ candidates and recent-pullback recovery ideas with review horizons and price lev
 - Explainable scores and headline sentiment.
 - Up to five recovery candidates from the symbols you configure.
 - Daily Telegram reports through GitHub Actions; manual runs are also available.
-- Optional private portfolio summaries using an encrypted repository secret.
+- General market reports with no personal portfolio loaded by the public workflow.
 - CLI, Streamlit dashboard, and mocked notification tests.
 
 ## Telegram report demo
@@ -62,12 +62,12 @@ The weekday workflow starts early and waits until 09:00 Europe/Berlin before
 starting its scan. Installation, scanning, and GitHub queue delays affect delivery
 time; exact 09:00 delivery is not guaranteed. A late-starting job sends when ready.
 
-## Optional private portfolio
+## Personal portfolio privacy
 
-The default public package contains no personal holdings. Copy
-`config/portfolio.example.json` to the ignored `config/portfolio.json` for local
-use. For cloud reports, put its contents in the `PORTFOLIO_CONFIG_JSON` repository
-secret. Avoid public workflow logs and artifacts containing private report content.
+The public workflow does not restore or load personal portfolio configuration.
+Keep personal holdings and the `PORTFOLIO_CONFIG_JSON` secret exclusively in
+your private repository. Remove that secret from this public repository if it
+was previously added. The public workflow scans only its configured market universe.
 
 ## Interpretation and limitations
 
