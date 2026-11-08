@@ -1,1 +1,5 @@
 symbol,asset_type,enabled,exchange
+MSFT,STOCK,true,NASDAQ
+NVDA,STOCK,true,NASDAQ
+SPY,ETF,true,NYSEARCA
+QQQ,ETF,true,NASDAQ
