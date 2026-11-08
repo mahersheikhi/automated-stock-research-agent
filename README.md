@@ -16,6 +16,16 @@ candidates and recent-pullback recovery ideas with review horizons and price lev
 - Optional private portfolio summaries using an encrypted repository secret.
 - CLI, Streamlit dashboard, and mocked notification tests.
 
+## Telegram report demo
+
+The agent sends a research shortlist with technical and news context, review
+horizons, and risk-review levels.
+
+![Illustrative Telegram research report](assets/telegram-demo.svg)
+
+*Illustrative mockup with fictional symbols and figures. Actual candidates,
+wording, and report length depend on configuration and available data.*
+
 ## Setup
 
 Python 3.12 is recommended. From the project folder:
