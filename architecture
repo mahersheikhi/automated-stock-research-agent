@@ -1,0 +1,71 @@
+                User
+                  │
+        ┌─────────┴─────────┐
+        │                   │
+        ▼                   ▼
+      CLI              Streamlit
+        │                   │
+        └─────────┬─────────┘
+                  ▼
+             Router Service
+                  │
+        ┌─────────┴─────────┐
+        ▼         ▼         ▼
+ Technical   Fundamental   News
+    │             │          │
+    └──────┬──────┴──────────┘
+           ▼
+      CIO Decision Agent
+           ▼
+      Final Recommendation
+           ▼
+ HTML / Dashboard / API
+
+
+
+
+
+
+ ## example:
+
+1:
+ Why is Nvidia falling today?
+
+ ↓
+
+Router
+
+↓
+
+News
+
+↓
+
+Technical
+
+↓
+
+Macro
+
+↓
+
+Answer
+
+2:
+Build me a €2,000 portfolio.
+
+↓
+
+Router
+
+↓
+
+Portfolio Agent
+
+↓
+
+Risk Agent
+
+↓
+
+Answer

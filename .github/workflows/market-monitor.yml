@@ -1,0 +1,52 @@
+name: Weekday Market Monitor
+
+on:
+  # Start early enough for the job to wait until 09:00 Europe/Berlin. GitHub
+  # Actions cron is UTC; 03:05 UTC leaves less than five hours of waiting in
+  # winter and summer, within a standard runner's six-hour job limit.
+  schedule:
+    - cron: "5 3 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore private portfolio configuration
+        env:
+          PORTFOLIO_CONFIG_JSON: ${{ secrets.PORTFOLIO_CONFIG_JSON }}
+        shell: bash
+        run: |
+          if [ -n "$PORTFOLIO_CONFIG_JSON" ]; then
+            printf '%s' "$PORTFOLIO_CONFIG_JSON" > config/portfolio.json
+            echo "Private portfolio configuration restored."
+          else
+            echo "No private portfolio configuration secret is set; portfolio summary is skipped."
+          fi
+      - name: Wait for the 09:00 Europe/Berlin opening window
+        if: github.event_name == 'schedule'
+        shell: bash
+        run: |
+          now=$(TZ=Europe/Berlin date +%s)
+          opening=$(TZ=Europe/Berlin date -d 'today 09:00' +%s)
+          if [ "$now" -lt "$opening" ]; then
+            wait_seconds=$((opening - now))
+            echo "Waiting $wait_seconds seconds for 09:00 Europe/Berlin."
+            sleep "$wait_seconds"
+          else
+            echo "GitHub started this job after 09:00 Europe/Berlin; sending the update now."
+          fi
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Send the 09:00 Europe/Berlin market update
+        run: python main.py monitor --universe --daily-report --rebound-top 5

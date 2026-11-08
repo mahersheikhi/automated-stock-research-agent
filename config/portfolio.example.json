@@ -1,0 +1,11 @@
+{
+  "holdings": [
+    {
+      "ticker": "NVDA",
+      "name": "Example holding",
+      "asset_type": "Stock",
+      "average_price": 0,
+      "units": 0
+    }
+  ]
+}

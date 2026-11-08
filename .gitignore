@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+config/portfolio.json
+.vscode/
+.idea/
+reports/*.html
+reports/*.png
+reports/*.pdf
+*.log
+data/monitor_state.json
+.DS_Store
+Thumbs.db

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>Today's Stock Scan</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 36px; background: #f7f8fa; color: #17202a; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
+    th, td { padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    th { background: #eef2f7; }
+  </style>
+</head>
+<body>
+<h1>Today's Stock Scan</h1>
+<p>Ranked by technical, fundamental, news, and risk scores. Not financial advice.</p>
+<table>
+<tr><th>Rank</th><th>Ticker</th><th>Price</th><th>Final</th><th>Decision</th><th>Tech</th><th>Fund.</th><th>News</th><th>Risk</th></tr>
+{% for c in candidates %}
+<tr>
+<td>{{ loop.index }}</td><td>{{ c.ticker }}</td><td>{{ "%.2f"|format(c.price) }}</td><td>{{ c.final_score }}</td><td>{{ c.decision }}</td><td>{{ c.technical }}</td><td>{{ c.fundamentals }}</td><td>{{ c.news }}</td><td>{{ c.risk }}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>

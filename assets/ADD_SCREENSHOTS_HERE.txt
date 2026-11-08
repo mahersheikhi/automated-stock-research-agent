@@ -1,0 +1,1 @@
+Add dashboard.png, technical-chart.png, and report.png to this folder.

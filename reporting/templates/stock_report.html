@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ ticker }} Stock AI Agent Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 36px; background: #f7f8fa; color: #17202a; }
+    .card { background: white; border-radius: 12px; padding: 22px; margin-bottom: 18px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+    .score { font-size: 28px; font-weight: bold; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .metric { background: #f1f4f8; padding: 12px; border-radius: 10px; }
+    a { color: #185abc; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img { max-width: 100%; border-radius: 10px; border: 1px solid #ddd; }
+    li { margin-bottom: 7px; }
+  </style>
+</head>
+<body>
+  <h1>{{ ticker }} Stock AI Agent Report</h1>
+  <div class="card">
+    <h2>Final decision</h2>
+    <div class="score">{{ decision.final_score }}/100 — {{ decision.decision }}</div>
+    <p><b>Confidence:</b> {{ decision.confidence }}</p>
+    <ul>{% for reason in decision.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>
+  </div>
+
+  <div class="card">
+    <h2>Price & technical analysis</h2>
+    <p><b>Price source:</b> Current displayed price is pulled from the Yahoo Finance quote endpoint. Technical indicators are calculated from historical Yahoo Finance data, so the latest chart close can differ slightly from the live quote during/after market hours.</p>
+    <img src="{{ chart_path }}" alt="{{ ticker }} chart">
+
+    <div class="card" style="background:#fbfcff; border:1px solid #e0e7ff; box-shadow:none;">
+      <h3>Buy / Sell setup indicator</h3>
+      <p><b>Latest signal:</b> {{ technical.latest_signal }}</p>
+      <p><small>These chart markers are educational setup signals, not automatic trading instructions. They are based on trend, RSI recovery/overbought risk, and MACD confirmation.</small></p>
+      {% if technical.signals %}
+      <ul>
+        {% for sig in technical.signals %}
+          <li><b>{{ sig.date }}</b> — {{ sig.signal }} near {{ "%.2f"|format(sig.price) }}: {{ sig.reason }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        <p>No recent buy/sell setup markers were triggered by the current rules.</p>
+      {% endif %}
+    </div>
+
+    <div class="grid">
+      <div class="metric"><b>Price</b><br>{{ "%.2f"|format(technical.price) }}<br><small><a href="https://finance.yahoo.com/quote/{{ ticker }}" target="_blank">Yahoo quote</a></small></div>
+      <div class="metric"><b>Technical score</b><br>{{ technical.score }}/100</div>
+      <div class="metric"><b>RSI</b><br>{{ "%.2f"|format(technical.rsi) }}</div>
+      <div class="metric"><b>ATR</b><br>{{ "%.2f"|format(technical.atr) }}</div>
+      <div class="metric"><b>SMA20</b><br>{{ "%.2f"|format(technical.sma20) }}</div>
+      <div class="metric"><b>SMA50</b><br>{{ "%.2f"|format(technical.sma50) }}</div>
+      <div class="metric"><b>Support</b><br>{{ "%.2f"|format(technical.support) }}</div>
+      <div class="metric"><b>Resistance</b><br>{{ "%.2f"|format(technical.resistance) }}</div>
+    </div>
+    <ul>{% for note in technical.notes %}<li>{{ note }}</li>{% endfor %}</ul>
+    <h3>Sources</h3><ul>{% for s in technical.sources %}<li><a href="{{ s.url }}" target="_blank">{{ s.label }}</a></li>{% endfor %}</ul>
+  </div>
+
+  <div class="card">
+    <h2>Fundamentals</h2>
+    <p><b>Score:</b> {{ fundamentals.score }}/100</p>
+    <ul>{% for note in fundamentals.notes %}<li>{{ note }}</li>{% endfor %}</ul>
+    <h3>Metrics</h3>
+    <ul>{% for k,v in fundamentals.metrics.items() %}<li><b>{{ k }}:</b> {{ v }}</li>{% endfor %}</ul>
+    <h3>Sources</h3><ul>{% for s in fundamentals.sources %}<li><a href="{{ s.url }}" target="_blank">{{ s.label }}</a></li>{% endfor %}</ul>
+  </div>
+
+  <div class="card">
+    <h2>News & sentiment</h2>
+    <p><b>Sentiment:</b> {{ news.sentiment }} — {{ news.score }}/100</p>
+    <pre style="white-space: pre-wrap">{{ news.summary }}</pre>
+    <h3>Headlines</h3>
+    <ul>{% for item in news.items %}<li><a href="{{ item.link }}" target="_blank">{{ item.title }}</a> — {{ item.source }} — {{ item.published }}</li>{% endfor %}</ul>
+    <h3>Sources</h3><ul>{% for s in news.sources[:12] %}<li><a href="{{ s.url }}" target="_blank">{{ s.label }}</a></li>{% endfor %}</ul>
+  </div>
+
+  <div class="card">
+    <h2>Risk management</h2>
+    <div class="grid">
+      <div class="metric"><b>Risk score</b><br>{{ risk.score }}/100</div>
+      <div class="metric"><b>Stop loss</b><br>{{ "%.2f"|format(risk.stop_loss) }}</div>
+      <div class="metric"><b>Take profit</b><br>{{ "%.2f"|format(risk.take_profit) }}</div>
+      <div class="metric"><b>Shares</b><br>{{ risk.shares }}</div>
+    </div>
+    <ul>{% for note in risk.notes %}<li>{{ note }}</li>{% endfor %}</ul>
+    <h3>Sources</h3><ul>{% for s in risk.sources %}<li><a href="{{ s.url }}" target="_blank">{{ s.label }}</a></li>{% endfor %}</ul>
+  </div>
+
+  <div class="card">
+    <h2>Important note</h2>
+    <p>This is not financial advice. Use it as a research assistant and paper-trading support tool only.</p>
+  </div>
+</body>
+</html>
