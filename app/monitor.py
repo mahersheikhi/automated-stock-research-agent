@@ -16,6 +16,7 @@ from providers.telegram import send_telegram_message
 
 
 DEFAULT_STATE_PATH = Path("data/monitor_state.json")
+MONITOR_SOURCE = "Source: automated-stock-research-agent | report grouped-v2"
 
 
 @dataclass(frozen=True)
@@ -97,22 +98,42 @@ def format_alert(alerts: Sequence[MonitorAlert]) -> str:
 
 
 def format_ranked_alert(alerts: Sequence[MonitorAlert], top_n: int = 5) -> str:
-    """Format the strongest and weakest research signals as separate rankings."""
+    """Rank eligible signals within separate buy, neutral and sell groups."""
+    if top_n < 1:
+        raise ValueError("top_n must be at least 1")
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    strongest = sorted(alerts, key=lambda alert: alert.score, reverse=True)[:top_n]
-    weakest = sorted(alerts, key=lambda alert: alert.score)[:top_n]
+    buy_alerts = sorted((alert for alert in alerts if alert.signal in {"Buy", "Strong Buy"}),
+                        key=lambda alert: alert.score, reverse=True)[:top_n]
+    watch_alerts = sorted((alert for alert in alerts if alert.signal in {"Watch", "Hold"}),
+                          key=lambda alert: alert.score, reverse=True)[:top_n]
+    sell_alerts = sorted((alert for alert in alerts if alert.signal in {"Sell", "Strong Sell"}),
+                         key=lambda alert: alert.score)[:top_n]
     lines = [
         f"Daily market monitor — {timestamp}",
         "Research signals only; not investment advice.",
+        MONITOR_SOURCE,
         "",
-        f"Top {len(strongest)} buy candidates",
+        f"Buy candidates ({len(buy_alerts)})",
     ]
-    for alert in strongest:
-        lines.append(f"- {alert.ticker}: {alert.signal} | ${alert.price:,.2f} | {alert.score:.1f}/100")
-    lines += ["", f"Top {len(weakest)} sell candidates"]
-    for alert in weakest:
-        lines.append(f"- {alert.ticker}: {alert.signal} | ${alert.price:,.2f} | {alert.score:.1f}/100")
-    lines += ["", "Sources: Yahoo Finance and Google News links are available in the detailed local monitor output."]
+    if buy_alerts:
+        for alert in buy_alerts:
+            lines.append(f"- {alert.ticker}: {alert.signal} | ${alert.price:,.2f} | {alert.score:.1f}/100")
+    else:
+        lines.append("- No symbols currently meet the Buy / Strong Buy criteria.")
+    lines += ["", f"Watch / Hold ({len(watch_alerts)})"]
+    if watch_alerts:
+        for alert in watch_alerts:
+            lines.append(f"- {alert.ticker}: {alert.signal} | ${alert.price:,.2f} | {alert.score:.1f}/100")
+    else:
+        lines.append("- No neutral watchlist symbols today.")
+    lines += ["", f"Sell candidates ({len(sell_alerts)})"]
+    if sell_alerts:
+        for alert in sell_alerts:
+            lines.append(f"- {alert.ticker}: {alert.signal} | ${alert.price:,.2f} | {alert.score:.1f}/100")
+    else:
+        lines.append("- No symbols currently meet the Sell / Strong Sell criteria.")
+    lines += ["", "Scores are heuristics, not calibrated probabilities or trade instructions.",
+              "Sources: Yahoo Finance and Google News links are available in the detailed local monitor output."]
     return "\n".join(lines)
 
 
@@ -154,15 +175,28 @@ def format_portfolio_alert(alerts: Sequence[MonitorAlert], holdings: Sequence[Ho
 
 
 def format_recovery_alert(candidates: Sequence[RecoveryCandidate]) -> str:
-    lines = ["Pullback recovery candidates", "Research signals only; not buy or sell instructions."]
+    lines = ["Pullback recovery candidates", "Research signals only; not buy or sell instructions.",
+             "Recovery scores are not probabilities; a weak overall signal may still be on recovery watch."]
     if not candidates:
         return "\n".join([*lines, "No recent pullbacks met the recovery-watch criteria today."])
+    lines.append("Timeframes are review schedules, not predictions of recovery; reversal is unconfirmed.")
     for candidate in candidates:
+        risk_line = (
+            f"- Review risk if a daily close is below {candidate.risk_review_price:,.2f}."
+            if candidate.risk_review_price is not None
+            else "- No valid support-based risk review level available."
+        )
+        resistance_line = (
+            f"- Nearby resistance to review: {candidate.target_review_price:,.2f}; not a price target."
+            if candidate.target_review_price is not None
+            else "- No nearby resistance review level available; wait for confirmation."
+        )
         lines += [
             "",
             f"{candidate.ticker}: {candidate.label} | price {candidate.price:,.2f} | recovery score {candidate.score:.1f}/100",
             f"- Pullback: {candidate.five_day_change:.1f}% in five trading days. {candidate.horizon}",
-            f"- Review risk if a daily close is below {candidate.risk_review_price:,.2f}; reassess near {candidate.target_review_price:,.2f}.",
+            risk_line,
+            resistance_line,
             f"- {candidate.reasons[1] if len(candidate.reasons) > 1 else candidate.reasons[0]}",
         ]
     return "\n".join(lines)

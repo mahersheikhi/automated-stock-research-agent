@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,8 +17,8 @@ class RecoveryCandidate:
     label: str
     five_day_change: float
     horizon: str
-    risk_review_price: float
-    target_review_price: float
+    risk_review_price: float | None
+    target_review_price: float | None
     reasons: list[str]
     reference_url: str
 
@@ -36,7 +37,7 @@ def evaluate_recovery(result: "StockAnalysisResult") -> RecoveryCandidate | None
 
     if -15 <= result.five_day_change <= -3:
         score += 20
-        reasons.append("Recent pullback is meaningful but not an extreme breakdown.")
+        reasons.append("Recent decline meets the pullback filter; reversal is unconfirmed.")
     elif result.five_day_change < -15:
         score += 5
         reasons.append("Large decline increases uncertainty; require extra confirmation.")
@@ -48,7 +49,7 @@ def evaluate_recovery(result: "StockAnalysisResult") -> RecoveryCandidate | None
         score += 10
         reasons.append("RSI is improving toward neutral.")
 
-    if result.support and result.price <= result.support * 1.06:
+    if 0 < result.support <= result.price <= result.support * 1.06:
         score += 15
         reasons.append("Price is close to recent support.")
     if result.macd > result.macd_signal:
@@ -74,8 +75,17 @@ def evaluate_recovery(result: "StockAnalysisResult") -> RecoveryCandidate | None
         "Mixed": "1–3 weeks; reassess after the next few sessions.",
         "Bearish": "3–10 trading days; high caution and frequent review.",
     }.get(result.trend, "1–3 weeks; reassess frequently.")
-    risk_review = max(0.01, result.support - (result.atr * 0.5))
-    target_review = result.resistance or result.price
+    # Review levels are observations, not forecasts of a return to an old high.
+    valid_atr = isfinite(result.atr) and result.atr > 0
+    risk_review = (
+        max(0.01, result.support - result.atr * 0.5)
+        if valid_atr and 0 < result.support <= result.price else None
+    )
+    target_review = (
+        result.resistance
+        if valid_atr and result.price < result.resistance <= result.price + 3 * result.atr
+        else None
+    )
 
     return RecoveryCandidate(
         ticker=result.ticker,
@@ -84,8 +94,8 @@ def evaluate_recovery(result: "StockAnalysisResult") -> RecoveryCandidate | None
         label=label,
         five_day_change=round(result.five_day_change, 1),
         horizon=horizon,
-        risk_review_price=round(risk_review, 2),
-        target_review_price=round(target_review, 2),
+        risk_review_price=round(risk_review, 2) if risk_review is not None else None,
+        target_review_price=round(target_review, 2) if target_review is not None else None,
         reasons=reasons[:3],
         reference_url=(result.references or {}).get("Yahoo Finance", ""),
     )
