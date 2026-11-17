@@ -21,6 +21,18 @@ candidates and recent-pullback recovery ideas with review horizons and price lev
 The agent sends a research shortlist with technical and news context, review
 horizons, and risk-review levels.
 
+Daily reports place Buy/Strong Buy, Watch/Hold, and Sell/Strong Sell signals in
+separate groups, with up to the configured limit in each group. Empty buy or sell
+groups are reported explicitly. Scores remain unvalidated screening heuristics.
+Recovery windows describe when to reassess; nearby resistance is an observation,
+not a return forecast. Resistance more than three ATR above the reference price
+is omitted, and missing volatility or broken support suppresses risk-review
+levels. These checks do not establish a profitable strategy.
+
+The daily report identifies this repository and its `grouped-v2` report format.
+GitHub Actions runs the default branch of this repository; updating a different
+repository or a local checkout does not update this scheduled sender.
+
 ![Illustrative Telegram research report](assets/telegram-demo.svg)
 
 *Illustrative mockup with fictional symbols and figures. Actual candidates,
